@@ -113,10 +113,16 @@ struct request {
 	 * space with the three elevator_private pointers.
 	 */
 	union {
+		struct {
+			struct io_cq		*icq;
+			void			*priv[2];
+		} elv;
+
 		void *elevator_private[3];
 		struct {
 			unsigned int		seq;
 			struct list_head	list;
+			rq_end_io_fn		*saved_end_io;
 		} flush;
 	};
 
@@ -268,6 +274,8 @@ struct request_queue
 	struct list_head	queue_head;
 	struct request		*last_merge;
 	struct elevator_queue	*elevator;
+	int			nr_rqs[2];	/* # allocated [a]sync rqs */
+	int			nr_rqs_elvpriv;	/* # allocated rqs w/ elvpriv */
 
 	/*
 	 * the queue request freelist, one for reads and one for writes
@@ -348,6 +356,8 @@ struct request_queue
 	unsigned int		rq_timeout;
 	struct timer_list	timeout;
 	struct list_head	timeout_list;
+
+        struct list_head	icq_list;
 
 	struct queue_limits	limits;
 

@@ -38,6 +38,11 @@
 #include <asm/uaccess.h>
 #include <linux/rtc.h>
 #include <linux/input.h>
+
+#ifdef CONFIG_BLX
+#include <linux/blx.h>
+#endif
+
 #define MAX17040_VCELL_MSB	0x02
 #define MAX17040_VCELL_LSB	0x03
 #define MAX17040_SOC_MSB	0x04
@@ -1001,6 +1006,15 @@ void max17040_batt_early_suspend(struct early_suspend *h)
 	dbg_func_out();
 
 }
+
+#ifdef CONFIG_BLX
+	if (chip->soc >= get_charginglimit())
+#else
+	if (chip->soc > MAX17040_BATTERY_FULL)
+#endif
+		chip->status = POWER_SUPPLY_STATUS_FULL;
+}
+
 void max17040_batt_late_resume(struct early_suspend *h)
 {
 	dbg_func_in();
